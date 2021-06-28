@@ -1,8 +1,8 @@
 if game.PlaceId == 3956818381 then -- polybattles
 loadstring(game:HttpGet('https://raw.githubusercontent.com/palavaOG/NinjaLegends/main/script/lua/latest.lua'))()
 else
-if game.PlaceId == 3956818381 then
-
+if game.PlaceId == 537413528 then
+loadstring(game:HttpGet('https://raw.githubusercontent.com/palavaOG/BABFT/main/script/script.lua'))()
 else
 game.Players.LocalPlayer:kick("HapyHub: Error 0 - UnkownGame") 
 end
