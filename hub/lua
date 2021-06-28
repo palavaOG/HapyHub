@@ -3,4 +3,3 @@ loadstring(game:HttpGet('https://github.com/palavaOG/NinjaLegends/blob/main/scri
 else
 game.Players.LocalPlayer:kick("HapyHub: Error 0 - UnkownGame") 
 end
-end
