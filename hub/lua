@@ -6,3 +6,4 @@ loadstring(game:HttpGet('https://raw.githubusercontent.com/palavaOG/BABFT/main/s
 else
 game.Players.LocalPlayer:kick("HapyHub: Error 0 - UnkownGame") 
 end
+end
