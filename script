@@ -1,0 +1,1871 @@
+--==================================================
+-- SIMPLE ESP GUI
+-- 4 TAB / SCROLLABLE / MAX DISTANCE
+--==================================================
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+
+local LocalPlayer = Players.LocalPlayer
+
+--==================================================
+-- EASY CONFIGURATION
+--==================================================
+
+local Config = {
+
+	-- GUI
+	GUIName = "SimpleESP",
+
+	Width = 400,
+	Height = 400,
+
+	StartPosition =
+		UDim2.new(0.5, -200, 0.5, -200),
+
+	-- GUI Colours
+	MainColor =
+		Color3.fromRGB(25, 25, 30),
+
+	TopBarColor =
+		Color3.fromRGB(32, 32, 38),
+
+	ButtonColor =
+		Color3.fromRGB(45, 45, 52),
+
+	ButtonOnColor =
+		Color3.fromRGB(40, 65, 48),
+
+	AccentColor =
+		Color3.fromRGB(80, 150, 255),
+
+	TextColor =
+		Color3.fromRGB(235, 235, 235),
+
+	MutedTextColor =
+		Color3.fromRGB(150, 150, 155),
+
+	DestroyColor =
+		Color3.fromRGB(180, 55, 55),
+
+	-- ESP Colours
+	TracerColor =
+		Color3.fromRGB(255, 255, 255),
+
+	ChamsFillColor =
+		Color3.fromRGB(255, 80, 80),
+
+	ChamsOutlineColor =
+		Color3.fromRGB(255, 255, 255),
+
+	ChamsFillTransparency = 0.5,
+	ChamsOutlineTransparency = 0,
+
+	ESPTextSize = 14,
+
+	TracerThickness = 2,
+
+	--==================================================
+	-- MAX ESP DISTANCE
+	--==================================================
+
+	MinDistance = 50,
+	MaxDistance = 2000,
+	DefaultDistance = 500,
+	DistanceStep = 50
+}
+
+--==================================================
+-- SETTINGS
+--==================================================
+
+local Settings = {
+
+	ESP = false,
+	Tracers = false,
+	Name = true,
+	Health = true,
+	Distance = true,
+	Chams = false,
+
+	MaxDistance =
+		Config.DefaultDistance
+}
+
+--==================================================
+-- UI PARENT
+--==================================================
+
+local UIParent
+
+if typeof(gethui) == "function" then
+	UIParent = gethui()
+else
+	UIParent = CoreGui
+end
+
+-- Remove old GUI
+
+local OldGui =
+	UIParent:FindFirstChild(
+		Config.GUIName
+	)
+
+if OldGui then
+	OldGui:Destroy()
+end
+
+--==================================================
+-- VARIABLES
+--==================================================
+
+local ESPObjects = {}
+local Connections = {}
+local ToggleButtons = {}
+
+local Destroyed = false
+
+--==================================================
+-- MAIN GUI
+--==================================================
+
+local ScreenGui =
+	Instance.new("ScreenGui")
+
+ScreenGui.Name =
+	Config.GUIName
+
+ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.DisplayOrder = 100
+
+ScreenGui.Parent =
+	UIParent
+
+--==================================================
+-- MAIN WINDOW
+--==================================================
+
+local Main =
+	Instance.new("Frame")
+
+Main.Name = "Main"
+
+Main.Size =
+	UDim2.new(
+		0,
+		Config.Width,
+		0,
+		Config.Height
+	)
+
+Main.Position =
+	Config.StartPosition
+
+Main.BackgroundColor3 =
+	Config.MainColor
+
+Main.BorderSizePixel = 0
+
+Main.Parent =
+	ScreenGui
+
+local MainCorner =
+	Instance.new("UICorner")
+
+MainCorner.CornerRadius =
+	UDim.new(0, 12)
+
+MainCorner.Parent =
+	Main
+
+local MainStroke =
+	Instance.new("UIStroke")
+
+MainStroke.Color =
+	Color3.fromRGB(65, 65, 75)
+
+MainStroke.Thickness = 1
+
+MainStroke.Parent =
+	Main
+
+--==================================================
+-- TOP BAR
+--==================================================
+
+local TopBar =
+	Instance.new("Frame")
+
+TopBar.Name =
+	"TopBar"
+
+TopBar.Size =
+	UDim2.new(1, 0, 0, 45)
+
+TopBar.BackgroundColor3 =
+	Config.TopBarColor
+
+TopBar.BorderSizePixel = 0
+
+TopBar.Parent =
+	Main
+
+local Title =
+	Instance.new("TextLabel")
+
+Title.Size =
+	UDim2.new(1, -55, 1, 0)
+
+Title.Position =
+	UDim2.new(0, 15, 0, 0)
+
+Title.BackgroundTransparency = 1
+
+Title.Text =
+	"Simple ESP"
+
+Title.TextColor3 =
+	Config.TextColor
+
+Title.TextSize = 18
+
+Title.Font =
+	Enum.Font.GothamBold
+
+Title.TextXAlignment =
+	Enum.TextXAlignment.Left
+
+Title.Parent =
+	TopBar
+
+--==================================================
+-- DESTROY BUTTON
+--==================================================
+
+local DestroyButton =
+	Instance.new("TextButton")
+
+DestroyButton.Size =
+	UDim2.new(0, 28, 0, 28)
+
+DestroyButton.Position =
+	UDim2.new(1, -34, 0, 8)
+
+DestroyButton.BackgroundColor3 =
+	Config.DestroyColor
+
+DestroyButton.Text = "×"
+
+DestroyButton.TextColor3 =
+	Color3.fromRGB(255, 255, 255)
+
+DestroyButton.TextSize = 18
+
+DestroyButton.Font =
+	Enum.Font.GothamBold
+
+DestroyButton.BorderSizePixel = 0
+
+DestroyButton.Parent =
+	TopBar
+
+local DestroyCorner =
+	Instance.new("UICorner")
+
+DestroyCorner.CornerRadius =
+	UDim.new(0, 7)
+
+DestroyCorner.Parent =
+	DestroyButton
+
+--==================================================
+-- TAB BAR
+--==================================================
+
+local TabBar =
+	Instance.new("Frame")
+
+TabBar.Name =
+	"TabBar"
+
+TabBar.Size =
+	UDim2.new(1, -20, 0, 42)
+
+TabBar.Position =
+	UDim2.new(0, 10, 0, 52)
+
+TabBar.BackgroundTransparency = 1
+
+TabBar.Parent =
+	Main
+
+local TabLayout =
+	Instance.new("UIListLayout")
+
+TabLayout.FillDirection =
+	Enum.FillDirection.Horizontal
+
+TabLayout.HorizontalAlignment =
+	Enum.HorizontalAlignment.Center
+
+TabLayout.Padding =
+	UDim.new(0, 6)
+
+TabLayout.Parent =
+	TabBar
+
+--==================================================
+-- CONTENT
+--==================================================
+
+local Content =
+	Instance.new("Frame")
+
+Content.Name =
+	"Content"
+
+Content.Size =
+	UDim2.new(
+		1,
+		-20,
+		1,
+		-105
+	)
+
+Content.Position =
+	UDim2.new(
+		0,
+		10,
+		0,
+		100
+	)
+
+Content.BackgroundTransparency = 1
+
+Content.Parent =
+	Main
+
+--==================================================
+-- TABS
+--==================================================
+
+local Tabs = {}
+
+local function CreateTab(name)
+
+	local Tab =
+		Instance.new("Frame")
+
+	Tab.Name =
+		name .. "Tab"
+
+	Tab.Size =
+		UDim2.new(1, 0, 1, 0)
+
+	Tab.BackgroundTransparency = 1
+
+	Tab.Visible = false
+
+	Tab.Parent =
+		Content
+
+	Tabs[name] = Tab
+
+	return Tab
+
+end
+
+local ESPTab =
+	CreateTab("ESP")
+
+local VisualsTab =
+	CreateTab("Visuals")
+
+local MiscTab =
+	CreateTab("Misc")
+
+local SettingsTab =
+	CreateTab("Settings")
+
+--==================================================
+-- TAB BUTTON
+--==================================================
+
+local function CreateTabButton(name)
+
+	local Button =
+		Instance.new("TextButton")
+
+	Button.Name =
+		name .. "Button"
+
+	Button.Size =
+		UDim2.new(
+			0.25,
+			-5,
+			1,
+			0
+		)
+
+	Button.BackgroundColor3 =
+		Config.ButtonColor
+
+	Button.Text =
+		name
+
+	Button.TextColor3 =
+		Config.MutedTextColor
+
+	Button.TextSize = 13
+
+	Button.Font =
+		Enum.Font.GothamBold
+
+	Button.BorderSizePixel = 0
+
+	Button.AutoButtonColor = false
+
+	Button.Parent =
+		TabBar
+
+	local Corner =
+		Instance.new("UICorner")
+
+	Corner.CornerRadius =
+		UDim.new(0, 7)
+
+	Corner.Parent =
+		Button
+
+	Button.MouseButton1Click:Connect(
+		function()
+
+			for _, tab in
+				pairs(Tabs) do
+
+				tab.Visible = false
+
+			end
+
+			for _, tabButton in
+				pairs(TabBar:GetChildren()) do
+
+				if tabButton:IsA("TextButton") then
+
+					tabButton.BackgroundColor3 =
+						Config.ButtonColor
+
+					tabButton.TextColor3 =
+						Config.MutedTextColor
+
+				end
+
+			end
+
+			Tabs[name].Visible =
+				true
+
+			Button.BackgroundColor3 =
+				Config.AccentColor
+
+			Button.TextColor3 =
+				Color3.fromRGB(
+					255,
+					255,
+					255
+				)
+
+		end
+	)
+
+	return Button
+end
+
+local ESPButton =
+	CreateTabButton("ESP")
+
+CreateTabButton("Visuals")
+CreateTabButton("Misc")
+CreateTabButton("Settings")
+
+-- Default tab
+
+ESPTab.Visible = true
+
+ESPButton.BackgroundColor3 =
+	Config.AccentColor
+
+ESPButton.TextColor3 =
+	Color3.fromRGB(
+		255,
+		255,
+		255
+	)
+
+--==================================================
+-- ESP SCROLLING
+--==================================================
+
+local ESPScroll =
+	Instance.new("ScrollingFrame")
+
+ESPScroll.Name =
+	"ESPScroll"
+
+ESPScroll.Size =
+	UDim2.new(1, 0, 1, 0)
+
+ESPScroll.BackgroundTransparency = 1
+
+ESPScroll.BorderSizePixel = 0
+
+ESPScroll.ScrollBarThickness = 4
+
+ESPScroll.ScrollBarImageColor3 =
+	Config.AccentColor
+
+ESPScroll.CanvasSize =
+	UDim2.new(0, 0, 0, 0)
+
+ESPScroll.AutomaticCanvasSize =
+	Enum.AutomaticSize.Y
+
+ESPScroll.Parent =
+	ESPTab
+
+local ESPLayout =
+	Instance.new("UIListLayout")
+
+ESPLayout.Padding =
+	UDim.new(0, 7)
+
+ESPLayout.SortOrder =
+	Enum.SortOrder.LayoutOrder
+
+ESPLayout.Parent =
+	ESPScroll
+
+local ESPPadding =
+	Instance.new("UIPadding")
+
+ESPPadding.PaddingLeft =
+	UDim.new(0, 2)
+
+ESPPadding.PaddingRight =
+	UDim.new(0, 6)
+
+ESPPadding.PaddingBottom =
+	UDim.new(0, 8)
+
+ESPPadding.Parent =
+	ESPScroll
+
+--==================================================
+-- HEADER
+--==================================================
+
+local function CreateHeader(parent, text)
+
+	local Header =
+		Instance.new("TextLabel")
+
+	Header.Size =
+		UDim2.new(1, 0, 0, 28)
+
+	Header.BackgroundTransparency = 1
+
+	Header.Text =
+		text
+
+	Header.TextColor3 =
+		Config.TextColor
+
+	Header.TextSize = 15
+
+	Header.Font =
+		Enum.Font.GothamBold
+
+	Header.TextXAlignment =
+		Enum.TextXAlignment.Left
+
+	Header.Parent =
+		parent
+
+	return Header
+
+end
+
+CreateHeader(
+	ESPScroll,
+	"Player ESP"
+)
+
+--==================================================
+-- TOGGLE
+--==================================================
+
+local function CreateToggle(
+	parent,
+	text,
+	setting
+)
+
+	local Button =
+		Instance.new("TextButton")
+
+	Button.Size =
+		UDim2.new(
+			1,
+			0,
+			0,
+			38
+		)
+
+	Button.BackgroundColor3 =
+		Config.ButtonColor
+
+	Button.BorderSizePixel = 0
+
+	Button.Text = ""
+
+	Button.AutoButtonColor = false
+
+	Button.Parent =
+		parent
+
+	local Corner =
+		Instance.new("UICorner")
+
+	Corner.CornerRadius =
+		UDim.new(0, 8)
+
+	Corner.Parent =
+		Button
+
+	local Label =
+		Instance.new("TextLabel")
+
+	Label.Size =
+		UDim2.new(
+			1,
+			-70,
+			1,
+			0
+		)
+
+	Label.Position =
+		UDim2.new(
+			0,
+			12,
+			0,
+			0
+		)
+
+	Label.BackgroundTransparency = 1
+
+	Label.Text =
+		text
+
+	Label.TextColor3 =
+		Config.TextColor
+
+	Label.TextSize = 14
+
+	Label.Font =
+		Enum.Font.Gotham
+
+	Label.TextXAlignment =
+		Enum.TextXAlignment.Left
+
+	Label.Parent =
+		Button
+
+	local State =
+		Instance.new("TextLabel")
+
+	State.Size =
+		UDim2.new(
+			0,
+			45,
+			1,
+			0
+		)
+
+	State.Position =
+		UDim2.new(
+			1,
+			-52,
+			0,
+			0
+		)
+
+	State.BackgroundTransparency = 1
+
+	State.TextSize = 13
+
+	State.Font =
+		Enum.Font.GothamBold
+
+	State.Parent =
+		Button
+
+	local function Update()
+
+		if Settings[setting] then
+
+			State.Text = "ON"
+
+			State.TextColor3 =
+				Color3.fromRGB(
+					75,
+					200,
+					105
+				)
+
+			Button.BackgroundColor3 =
+				Config.ButtonOnColor
+
+		else
+
+			State.Text = "OFF"
+
+			State.TextColor3 =
+				Config.MutedTextColor
+
+			Button.BackgroundColor3 =
+				Config.ButtonColor
+
+		end
+
+	end
+
+	Button.MouseButton1Click:Connect(
+		function()
+
+			Settings[setting] =
+				not Settings[setting]
+
+			Update()
+
+		end
+	)
+
+	ToggleButtons[setting] =
+		Update
+
+	Update()
+
+	return Button
+end
+
+--==================================================
+-- ESP OPTIONS
+--==================================================
+
+CreateToggle(
+	ESPScroll,
+	"ESP",
+	"ESP"
+)
+
+CreateToggle(
+	ESPScroll,
+	"Tracers",
+	"Tracers"
+)
+
+CreateToggle(
+	ESPScroll,
+	"View Name",
+	"Name"
+)
+
+CreateToggle(
+	ESPScroll,
+	"View Inventory",
+	"Inventory"
+)
+
+CreateToggle(
+	ESPScroll,
+	"View Health",
+	"Health"
+)
+
+CreateToggle(
+	ESPScroll,
+	"Distance",
+	"Distance"
+)
+
+CreateToggle(
+	ESPScroll,
+	"Chams",
+	"Chams"
+)
+
+--==================================================
+-- MAX DISTANCE
+--==================================================
+
+local DistanceFrame =
+	Instance.new("Frame")
+
+DistanceFrame.Size =
+	UDim2.new(
+		1,
+		0,
+		0,
+		75
+	)
+
+DistanceFrame.BackgroundColor3 =
+	Config.ButtonColor
+
+DistanceFrame.BorderSizePixel = 0
+
+DistanceFrame.Parent =
+	ESPScroll
+
+local DistanceCorner =
+	Instance.new("UICorner")
+
+DistanceCorner.CornerRadius =
+	UDim.new(0, 8)
+
+DistanceCorner.Parent =
+	DistanceFrame
+
+local DistanceTitle =
+	Instance.new("TextLabel")
+
+DistanceTitle.Size =
+	UDim2.new(
+		1,
+		-25,
+		0,
+		28
+	)
+
+DistanceTitle.Position =
+	UDim2.new(
+		0,
+		12,
+		0,
+		5
+	)
+
+DistanceTitle.BackgroundTransparency = 1
+
+DistanceTitle.Text =
+	"Max Distance"
+
+DistanceTitle.TextColor3 =
+	Config.TextColor
+
+DistanceTitle.TextSize = 14
+
+DistanceTitle.Font =
+	Enum.Font.Gotham
+
+DistanceTitle.TextXAlignment =
+	Enum.TextXAlignment.Left
+
+DistanceTitle.Parent =
+	DistanceFrame
+
+local DistanceValue =
+	Instance.new("TextLabel")
+
+DistanceValue.Size =
+	UDim2.new(
+		0,
+		100,
+		0,
+		28
+	)
+
+DistanceValue.Position =
+	UDim2.new(
+		1,
+		-110,
+		0,
+		5
+	)
+
+DistanceValue.BackgroundTransparency = 1
+
+DistanceValue.TextColor3 =
+	Config.AccentColor
+
+DistanceValue.TextSize = 14
+
+DistanceValue.Font =
+	Enum.Font.GothamBold
+
+DistanceValue.TextXAlignment =
+	Enum.TextXAlignment.Right
+
+DistanceValue.Parent =
+	DistanceFrame
+
+--==================================================
+-- SLIDER
+--==================================================
+
+local SliderBackground =
+	Instance.new("Frame")
+
+SliderBackground.Size =
+	UDim2.new(
+		1,
+		-24,
+		0,
+		8
+	)
+
+SliderBackground.Position =
+	UDim2.new(
+		0,
+		12,
+		0,
+		52
+	)
+
+SliderBackground.BackgroundColor3 =
+	Color3.fromRGB(
+		65,
+		65,
+		72
+	)
+
+SliderBackground.BorderSizePixel = 0
+
+SliderBackground.Parent =
+	DistanceFrame
+
+local SliderCorner =
+	Instance.new("UICorner")
+
+SliderCorner.CornerRadius =
+	UDim.new(1, 0)
+
+SliderCorner.Parent =
+	SliderBackground
+
+local SliderFill =
+	Instance.new("Frame")
+
+SliderFill.Size =
+	UDim2.new(
+		(Settings.MaxDistance -
+			Config.MinDistance) /
+			(Config.MaxDistance -
+				Config.MinDistance),
+		0,
+		1,
+		0
+	)
+
+SliderFill.BackgroundColor3 =
+	Config.AccentColor
+
+SliderFill.BorderSizePixel = 0
+
+SliderFill.Parent =
+	SliderBackground
+
+local FillCorner =
+	Instance.new("UICorner")
+
+FillCorner.CornerRadius =
+	UDim.new(1, 0)
+
+FillCorner.Parent =
+	SliderFill
+
+local SliderKnob =
+	Instance.new("Frame")
+
+SliderKnob.Size =
+	UDim2.new(
+		0,
+		14,
+		0,
+		14
+	)
+
+SliderKnob.AnchorPoint =
+	Vector2.new(
+		0.5,
+		0.5
+	)
+
+SliderKnob.BackgroundColor3 =
+	Color3.fromRGB(
+		255,
+		255,
+		255
+	)
+
+SliderKnob.BorderSizePixel = 0
+
+SliderKnob.Position =
+	UDim2.new(
+		(Settings.MaxDistance -
+			Config.MinDistance) /
+			(Config.MaxDistance -
+				Config.MinDistance),
+		0,
+		0.5,
+		0
+	)
+
+SliderKnob.Parent =
+	SliderBackground
+
+local KnobCorner =
+	Instance.new("UICorner")
+
+KnobCorner.CornerRadius =
+	UDim.new(1, 0)
+
+KnobCorner.Parent =
+	SliderKnob
+
+--==================================================
+-- SLIDER LOGIC
+--==================================================
+
+local Sliding = false
+
+local function UpdateDistance(input)
+
+	local X =
+		input.Position.X
+
+	local AbsolutePosition =
+		SliderBackground.AbsolutePosition.X
+
+	local AbsoluteSize =
+		SliderBackground.AbsoluteSize.X
+
+	local Percent =
+		math.clamp(
+			(X - AbsolutePosition) /
+				AbsoluteSize,
+			0,
+			1
+		)
+
+	local Range =
+		Config.MaxDistance -
+		Config.MinDistance
+
+	local Distance =
+		Config.MinDistance +
+		(Range * Percent)
+
+	Distance =
+		math.floor(
+			Distance /
+				Config.DistanceStep
+		) *
+			Config.DistanceStep
+
+	Distance =
+		math.clamp(
+			Distance,
+			Config.MinDistance,
+			Config.MaxDistance
+		)
+
+	Settings.MaxDistance =
+		Distance
+
+	local Normalized =
+		(Distance -
+			Config.MinDistance) /
+			Range
+
+	SliderFill.Size =
+		UDim2.new(
+			Normalized,
+			0,
+			1,
+			0
+		)
+
+	SliderKnob.Position =
+		UDim2.new(
+			Normalized,
+			0,
+			0.5,
+			0
+		)
+
+	DistanceValue.Text =
+		tostring(Distance) ..
+		" studs"
+
+end
+
+DistanceValue.Text =
+	tostring(Settings.MaxDistance) ..
+	" studs"
+
+SliderBackground.InputBegan:Connect(
+	function(input)
+
+		if input.UserInputType ==
+			Enum.UserInputType.MouseButton1 then
+
+			Sliding = true
+
+			UpdateDistance(input)
+
+		end
+
+	end
+)
+
+UserInputService.InputChanged:Connect(
+	function(input)
+
+		if Sliding
+			and input.UserInputType ==
+			Enum.UserInputType.MouseMovement then
+
+			UpdateDistance(input)
+
+		end
+
+	end
+)
+
+UserInputService.InputEnded:Connect(
+	function(input)
+
+		if input.UserInputType ==
+			Enum.UserInputType.MouseButton1 then
+
+			Sliding = false
+
+		end
+
+	end
+)
+
+--==================================================
+-- OTHER TABS
+--==================================================
+
+CreateHeader(
+	VisualsTab,
+	"Visual Options"
+)
+
+local VisualText =
+	Instance.new("TextLabel")
+
+VisualText.Size =
+	UDim2.new(1, 0, 0, 50)
+
+VisualText.Position =
+	UDim2.new(0, 0, 0, 40)
+
+VisualText.BackgroundTransparency = 1
+
+VisualText.Text =
+	"Visual options can be added here."
+
+VisualText.TextColor3 =
+	Config.MutedTextColor
+
+VisualText.TextSize = 14
+
+VisualText.Font =
+	Enum.Font.Gotham
+
+VisualText.Parent =
+	VisualsTab
+
+CreateHeader(
+	MiscTab,
+	"Miscellaneous"
+)
+
+local MiscText =
+	Instance.new("TextLabel")
+
+MiscText.Size =
+	UDim2.new(1, 0, 0, 50)
+
+MiscText.Position =
+	UDim2.new(0, 0, 0, 40)
+
+MiscText.BackgroundTransparency = 1
+
+MiscText.Text =
+	"Miscellaneous options can be added here."
+
+MiscText.TextColor3 =
+	Config.MutedTextColor
+
+MiscText.TextSize = 14
+
+MiscText.Font =
+	Enum.Font.Gotham
+
+MiscText.Parent =
+	MiscTab
+
+CreateHeader(
+	SettingsTab,
+	"GUI Settings"
+)
+
+local SettingsText =
+	Instance.new("TextLabel")
+
+SettingsText.Size =
+	UDim2.new(1, 0, 0, 50)
+
+SettingsText.Position =
+	UDim2.new(0, 0, 0, 40)
+
+SettingsText.BackgroundTransparency = 1
+
+SettingsText.Text =
+	"GUI settings can be added here."
+
+SettingsText.TextColor3 =
+	Config.MutedTextColor
+
+SettingsText.TextSize = 14
+
+SettingsText.Font =
+	Enum.Font.Gotham
+
+SettingsText.Parent =
+	SettingsTab
+
+--==================================================
+-- ESP
+--==================================================
+
+local function RemoveESP(player)
+
+	local Objects =
+		ESPObjects[player]
+
+	if not Objects then
+		return
+	end
+
+	for _, Object in
+		pairs(Objects) do
+
+		if Object
+			and Object.Destroy then
+
+			Object:Destroy()
+
+		end
+
+	end
+
+	ESPObjects[player] = nil
+
+end
+
+local function CreateESP(player)
+
+	if player == LocalPlayer then
+		return
+	end
+
+	RemoveESP(player)
+
+	local Objects = {}
+
+	-- CHAMS
+
+	local Highlight =
+		Instance.new("Highlight")
+
+	Highlight.Name =
+		"ESP_Chams"
+
+	Highlight.FillColor =
+		Config.ChamsFillColor
+
+	Highlight.OutlineColor =
+		Config.ChamsOutlineColor
+
+	Highlight.FillTransparency =
+		Config.ChamsFillTransparency
+
+	Highlight.OutlineTransparency =
+		Config.ChamsOutlineTransparency
+
+	Highlight.Enabled = false
+
+	Highlight.Parent =
+		UIParent
+
+	Objects.Highlight =
+		Highlight
+
+	-- BILLBOARD
+
+	local Billboard =
+		Instance.new("BillboardGui")
+
+	Billboard.Name =
+		"ESP_Info"
+
+	Billboard.Size =
+		UDim2.new(
+			0,
+			200,
+			0,
+			70
+		)
+
+	Billboard.StudsOffset =
+		Vector3.new(
+			0,
+			3,
+			0
+		)
+
+	Billboard.AlwaysOnTop = true
+	Billboard.Enabled = false
+
+	Billboard.Parent =
+		UIParent
+
+	local Info =
+		Instance.new("TextLabel")
+
+	Info.Size =
+		UDim2.new(
+			1,
+			0,
+			1,
+			0
+		)
+
+	Info.BackgroundTransparency = 1
+
+	Info.TextColor3 =
+		Color3.fromRGB(
+			255,
+			255,
+			255
+		)
+
+	Info.TextStrokeTransparency = 0
+
+	Info.TextSize =
+		Config.ESPTextSize
+
+	Info.Font =
+		Enum.Font.GothamBold
+
+	Info.Parent =
+		Billboard
+
+	Objects.Billboard =
+		Billboard
+
+	Objects.Info =
+		Info
+
+	-- TRACER
+
+	local Tracer =
+		Instance.new("Frame")
+
+	Tracer.Name =
+		"ESP_Tracer"
+
+	Tracer.AnchorPoint =
+		Vector2.new(
+			0.5,
+			0.5
+		)
+
+	Tracer.BackgroundColor3 =
+		Config.TracerColor
+
+	Tracer.BorderSizePixel = 0
+
+	Tracer.Visible = false
+
+	Tracer.Parent =
+		ScreenGui
+
+	Objects.Tracer =
+		Tracer
+
+	ESPObjects[player] =
+		Objects
+
+end
+
+--==================================================
+-- PLAYERS
+--==================================================
+
+for _, player in
+	ipairs(Players:GetPlayers()) do
+
+	CreateESP(player)
+
+end
+
+Connections.PlayerAdded =
+	Players.PlayerAdded:Connect(
+		function(player)
+
+			CreateESP(player)
+
+		end
+	)
+
+Connections.PlayerRemoving =
+	Players.PlayerRemoving:Connect(
+		function(player)
+
+			RemoveESP(player)
+
+		end
+	)
+
+--==================================================
+-- UPDATE ESP
+--==================================================
+
+local function UpdateESP(
+	player,
+	objects
+)
+
+	if not Settings.ESP then
+
+		objects.Billboard.Enabled = false
+		objects.Highlight.Enabled = false
+		objects.Tracer.Visible = false
+
+		return
+
+	end
+
+	local Character =
+		player.Character
+
+	if not Character then
+
+		objects.Billboard.Enabled = false
+		objects.Highlight.Enabled = false
+		objects.Tracer.Visible = false
+
+		return
+
+	end
+
+	local Humanoid =
+		Character:FindFirstChildOfClass(
+			"Humanoid"
+		)
+
+	local Root =
+		Character:FindFirstChild(
+			"HumanoidRootPart"
+		)
+
+	if not Humanoid
+		or not Root
+		or Humanoid.Health <= 0 then
+
+		objects.Billboard.Enabled = false
+		objects.Highlight.Enabled = false
+		objects.Tracer.Visible = false
+
+		return
+
+	end
+
+	--==================================================
+	-- DISTANCE CHECK
+	--==================================================
+
+	local LocalCharacter =
+		LocalPlayer.Character
+
+	local LocalRoot =
+		LocalCharacter
+		and LocalCharacter:FindFirstChild(
+			"HumanoidRootPart"
+		)
+
+	if not LocalRoot then
+		return
+	end
+
+	local Distance =
+		(LocalRoot.Position -
+		Root.Position).Magnitude
+
+	-- Hide entire ESP beyond max distance
+
+	if Distance >
+		Settings.MaxDistance then
+
+		objects.Billboard.Enabled = false
+		objects.Highlight.Enabled = false
+		objects.Tracer.Visible = false
+
+		return
+
+	end
+
+	--==================================================
+	-- CHAMS
+	--==================================================
+
+	objects.Highlight.Adornee =
+		Character
+
+	objects.Highlight.Enabled =
+		Settings.Chams
+
+--==================================================*
+-- TEXT*
+--==================================================*
+
+local Text = ""
+
+if Settings.Name then
+    Text = player.DisplayName
+end
+
+if Settings.Health then
+    if Text ~= "" then
+        Text = Text .. "\n"
+    end
+
+    Text =
+        Text ..
+        "HP: " ..
+        math.floor(
+            Humanoid.Health
+        )
+end
+
+if Settings.Distance then
+    if Text ~= "" then
+        Text = Text .. "\n"
+    end
+
+    Text =
+        Text ..
+        math.floor(
+            Distance
+        ) ..
+        " studs"
+end
+
+--==================================================*
+-- INVENTORY*
+--==================================================*
+
+if Settings.Inventory then
+    local Data = player:FindFirstChild("Data")
+
+    if Data then
+        local InventoryText = ""
+
+        for i = 1, 35 do
+            local Slot =
+                Data:FindFirstChild(
+                    "Slot" .. i
+                )
+
+            if Slot then
+                local ItemName =
+                    Slot:FindFirstChild("ItemName")
+
+                local Amount =
+                    Slot:FindFirstChild("Amount")
+
+                if ItemName and Amount then
+                    if tostring(ItemName.Value) ~= ""
+                        and tostring(ItemName.Value) ~= "Empty" then
+
+                        if InventoryText ~= "" then
+                            InventoryText =
+                                InventoryText .. "\n"
+                        end
+
+                        InventoryText =
+                            InventoryText ..
+                            tostring(ItemName.Value) ..
+                            " x" ..
+                            tostring(Amount.Value)
+                    end
+                end
+            end
+        end
+
+        if InventoryText ~= "" then
+            if Text ~= "" then
+                Text = Text .. "\n"
+            end
+
+            Text =
+                Text ..
+                "Inventory:\n" ..
+                InventoryText
+        end
+    end
+end
+
+objects.Info.Text =
+    Text
+
+objects.Billboard.Adornee =
+    Root
+
+objects.Billboard.Enabled =
+    Settings.Name
+    or Settings.Health
+    or Settings.Distance
+    or Settings.Inventory
+
+	--==================================================
+	-- TRACERS
+	--==================================================
+
+	if Settings.Tracers then
+
+		local Camera =
+			workspace.CurrentCamera
+
+		if Camera then
+
+			local Position, Visible =
+				Camera:WorldToViewportPoint(
+					Root.Position
+				)
+
+			if Visible
+				and Position.Z > 0 then
+
+				local Center =
+					Vector2.new(
+						Camera.ViewportSize.X / 2,
+						Camera.ViewportSize.Y
+					)
+
+				local Target =
+					Vector2.new(
+						Position.X,
+						Position.Y
+					)
+
+				local Difference =
+					Target - Center
+
+				local Length =
+					Difference.Magnitude
+
+				objects.Tracer.Position =
+					UDim2.fromOffset(
+						(Center.X + Target.X) / 2,
+						(Center.Y + Target.Y) / 2
+					)
+
+				objects.Tracer.Size =
+					UDim2.fromOffset(
+						Length,
+						Config.TracerThickness
+					)
+
+				objects.Tracer.Rotation =
+					math.deg(
+						math.atan2(
+							Difference.Y,
+							Difference.X
+						)
+					)
+
+				objects.Tracer.Visible =
+					true
+
+			else
+
+				objects.Tracer.Visible =
+					false
+
+			end
+
+		end
+
+	else
+
+		objects.Tracer.Visible =
+			false
+
+	end
+
+end
+
+--==================================================
+-- UPDATE LOOP
+--==================================================
+
+Connections.RenderStepped =
+	RunService.RenderStepped:Connect(
+		function()
+
+			if Destroyed then
+				return
+			end
+
+			for player, objects in
+				pairs(ESPObjects) do
+
+				UpdateESP(
+					player,
+					objects
+				)
+
+			end
+
+		end
+	)
+
+--==================================================
+-- DESTROY
+--==================================================
+
+local function DestroyEverything()
+
+	if Destroyed then
+		return
+	end
+
+	Destroyed = true
+
+	for _, connection in
+		pairs(Connections) do
+
+		if connection then
+			connection:Disconnect()
+		end
+
+	end
+
+	for player in
+		pairs(ESPObjects) do
+
+		RemoveESP(player)
+
+	end
+
+	table.clear(ESPObjects)
+
+	if ScreenGui then
+		ScreenGui:Destroy()
+	end
+
+end
+
+DestroyButton.MouseButton1Click:Connect(
+	DestroyEverything
+)
+
+--==================================================
+-- DRAGGING
+--==================================================
+
+local Dragging = false
+local DragStart
+local StartPosition
+
+TopBar.InputBegan:Connect(
+	function(input)
+
+		if input.UserInputType ==
+			Enum.UserInputType.MouseButton1
+			or input.UserInputType ==
+			Enum.UserInputType.Touch then
+
+			Dragging = true
+
+			DragStart =
+				input.Position
+
+			StartPosition =
+				Main.Position
+
+		end
+
+	end
+)
+
+TopBar.InputEnded:Connect(
+	function(input)
+
+		if input.UserInputType ==
+			Enum.UserInputType.MouseButton1
+			or input.UserInputType ==
+			Enum.UserInputType.Touch then
+
+			Dragging = false
+
+		end
+
+	end
+)
+
+Connections.InputChanged =
+	UserInputService.InputChanged:Connect(
+		function(input)
+
+			if not Dragging then
+				return
+			end
+
+			if input.UserInputType ~=
+				Enum.UserInputType.MouseMovement
+				and input.UserInputType ~=
+				Enum.UserInputType.Touch then
+
+				return
+
+			end
+
+			local Delta =
+				input.Position -
+				DragStart
+
+			Main.Position =
+				UDim2.new(
+					StartPosition.X.Scale,
+					StartPosition.X.Offset +
+						Delta.X,
+
+					StartPosition.Y.Scale,
+					StartPosition.Y.Offset +
+						Delta.Y
+				)
+
+		end
+	)
