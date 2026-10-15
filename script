@@ -225,7 +225,7 @@ Title.Position =
 Title.BackgroundTransparency = 1
 
 Title.Text =
-	"Simple ESP"
+	"Decay"
 
 Title.TextColor3 =
 	Config.TextColor
@@ -381,9 +381,6 @@ end
 local ESPTab =
 	CreateTab("ESP")
 
-local VisualsTab =
-	CreateTab("Visuals")
-
 local MiscTab =
 	CreateTab("Misc")
 
@@ -487,7 +484,6 @@ end
 local ESPButton =
 	CreateTabButton("ESP")
 
-CreateTabButton("Visuals")
 CreateTabButton("Misc")
 CreateTabButton("Settings")
 
@@ -1164,36 +1160,6 @@ UserInputService.InputEnded:Connect(
 --==================================================
 
 CreateHeader(
-	VisualsTab,
-	"Visual Options"
-)
-
-local VisualText =
-	Instance.new("TextLabel")
-
-VisualText.Size =
-	UDim2.new(1, 0, 0, 50)
-
-VisualText.Position =
-	UDim2.new(0, 0, 0, 40)
-
-VisualText.BackgroundTransparency = 1
-
-VisualText.Text =
-	"Visual options can be added here."
-
-VisualText.TextColor3 =
-	Config.MutedTextColor
-
-VisualText.TextSize = 14
-
-VisualText.Font =
-	Enum.Font.Gotham
-
-VisualText.Parent =
-	VisualsTab
-
-CreateHeader(
 	MiscTab,
 	"Miscellaneous"
 )
@@ -1210,7 +1176,7 @@ MiscText.Position =
 MiscText.BackgroundTransparency = 1
 
 MiscText.Text =
-	"Miscellaneous options can be added here."
+	"Coming Soon"
 
 MiscText.TextColor3 =
 	Config.MutedTextColor
@@ -1240,7 +1206,7 @@ SettingsText.Position =
 SettingsText.BackgroundTransparency = 1
 
 SettingsText.Text =
-	"GUI settings can be added here."
+	"Coming Soon"
 
 SettingsText.TextColor3 =
 	Config.MutedTextColor
